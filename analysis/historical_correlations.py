@@ -97,6 +97,26 @@ def season_correlations(save=False):
                                     index=False)
     return bbref_correlation_season_df
 
+def season_lags(save=False):
+    df = pd.read_csv('../app/data/Team_Stats.csv')
+    shifted = df.groupby(['TEAM']).shift(-1)
+    season_lag_df = df.join(shifted.rename(columns=lambda x: x+"_lag"))
+    season_lag_df.dropna(inplace=True)
+    if save:
+        season_lag_df.to_csv('../app/data/Basketball_Reference_Season_Lags.csv',
+                                    index=False)
+    return season_lag_df
+
+
 if __name__=='__main__':
-    all_time_correlations(save=True)
-    season_correlations(save=True)
+    # all_time_correlations(save=True)
+    # season_correlations(save=True)
+    df = season_lags(save=True)
+    #
+    #
+    # import seaborn as sns
+    # import matplotlib.pyplot as plt
+    #
+    # fig, ax = plt.subplots()
+    # sns.scatterplot(x='ORTG', y='ORTG_lag', data=df2)
+    # plt.show()

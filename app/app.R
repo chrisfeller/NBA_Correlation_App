@@ -1,4 +1,4 @@
-# Imports
+library(shinydashboard)
 library(shiny)
 library(tidyverse)
 library(ggplot2)
@@ -12,26 +12,31 @@ setwd('/Users/chrisfeller/Desktop/NBA_Corretion_App/app/')
 total <- read.csv('data/Basketball_Reference_Total_Correlations.csv')
 season <- read.csv('data/Basketball_Reference_Season_Correlations.csv')
 
-ui <- fluidPage(
-  titlePanel('NBA Correlation App'), 
-  
-  fluidRow(
-  
-  column(6, 
-         h3('Correlation Table'),
-         DT::dataTableOutput('table')),
-  
-  column(6, 
-         selectInput("select", h3("Select Statistic"),
-                     choices = sort(total$STATISTIC), selected = '%ASTD_2P'),
-         helpText('Select a statistic to display over time.'), 
-         br(), 
-         plotOutput("plot"))
-))
-  
-  
+ui <- dashboardPage(skin = 'blue', 
+  dashboardHeader(title = 'NBA Correlation App', titleWidth = 1700), 
+  dashboardSidebar(disable = TRUE),
+  dashboardBody(
+    fluidRow(
+    
+    column(6,
+           h3('Correlation Table'),
+           DT::dataTableOutput('table')),
+    
+    column(6,
+           selectInput("statistic", h3("Select Statistic"),
+                       choices = sort(total$STATISTIC),
+                       selected = '%ASTD_2P'),
+           helpText('Select a statistic to plot'), 
+           selectInput('plot_type', h3('Select Plot Type'),
+                       choices = c('Average Rank', 'Pearson Correlation', 'Spearman Correlation'),
+                       selected = 'Average Rank'),
+           helpText('Select a plot type.'),
+           plotOutput("plot"))
+  ))
+)
 
-  
+
+
 
 server <- function(input, output){
   output$table <- DT::renderDataTable(
@@ -39,24 +44,54 @@ server <- function(input, output){
                                            pageLength = 20, 
                                            searching = FALSE)) 
   
-  selected <- reactive(season %>% filter(STATISTIC == input$select))
- 
-
+  selected <- reactive(season %>% filter(STATISTIC == input$statistic))
+  
+  
   output$plot <- renderPlot({
-    selected() %>%
-      ggplot(aes(x=SEASON, y=AVERAGE_RANK, group=1)) +
-      geom_line() +
-      geom_point() +
-      labs(y = "Average Rank", x = 'Season') +
-      ggtitle(sprintf("%s Correlation Over Time", input$select)) + 
-      ylim(low=0, high=120) +
-      theme_grey(15) + 
-      theme(axis.text.x = element_text(angle = 45, hjust = 1), 
-            plot.title = element_text(hjust = 0.5, face = 'bold'))
-      # scale_color_fivethirtyeight() +
-      # theme_fivethirtyeight()
+    if (input$plot_type == 'Average Rank') {
+      selected() %>%
+        ggplot(aes(x=SEASON, y=AVERAGE_RANK, group=1)) +
+        geom_line() +
+        geom_point() +
+        labs(y = "Average Rank", x = 'Season') +
+        ggtitle(sprintf("%s Correlation Over Time", input$statistic)) + 
+        ylim(low=0, high=120) +
+        theme_dark(15) + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+              plot.title = element_text(hjust = 0.5, face = 'bold'), 
+              panel.background= element_blank(),
+              plot.background = element_blank()) }
     
-  })
+    else if (input$plot_type == 'Pearson Correlation') {
+      selected() %>%
+        ggplot(aes(x=SEASON, y=PEARSON_CORRELATION, group=1)) +
+        geom_line() +
+        geom_point() +
+        labs(y = "Pearson Correlation", x = 'Season') +
+        ggtitle(sprintf("%s Correlation Over Time", input$statistic)) + 
+        ylim(low=-1, high=1) +
+        theme_dark(15) + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+              plot.title = element_text(hjust = 0.5, face = 'bold'), 
+              panel.background= element_blank(),
+              plot.background = element_blank())}
+    
+    else if (input$plot_type == 'Spearman Correlation') {
+      selected() %>%
+        ggplot(aes(x=SEASON, y=SPEARMAN_CORRELATION, group=1)) +
+        geom_line() +
+        geom_point() +
+        labs(y = "Spearman Correlation", x = 'Season') +
+        ggtitle(sprintf("%s Correlation Over Time", input$statistic)) + 
+        ylim(low=-1, high=1) +
+        theme_dark(15) + 
+        theme(axis.text.x = element_text(angle = 45, hjust = 1), 
+              plot.title = element_text(hjust = 0.5, face = 'bold'), 
+              panel.background= element_blank(),
+              plot.background = element_blank())
+    }
+    
+  }, bg="transparent", execOnResize = TRUE)
 }
 
 shinyApp(ui = ui, server = server)
