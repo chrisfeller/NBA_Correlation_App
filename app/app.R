@@ -21,23 +21,29 @@ ui <- dashboardPage(skin = 'blue',
   
   dashboardSidebar(
     selectInput("statistic", h3("Statistic"),
-                choices = sort(pearson$STATISTIC),
+                choices = sort(pearson$STATISTIC)[sort(pearson$STATISTIC) != 'RANK'],
                 selected = 'AVERAGE_AGE'),
-    helpText('Select a statistic'), 
-    selectInput('correlation', h3('Correlation Coefficient'),
-                choices = c('Pearson Correlation', 'Spearman Correlation'),
-                selected = 'Pearson Correlation'),
-    helpText('Select a correlation')
+    selectInput('correlation', h3('Correlation'),
+                choices = c('Pearson', 'Spearman'),
+                selected = 'Pearson'),
+    br(), br(), br(), br(), br(), br(), 
+    br(), br(), br(), br(), br(), br(), 
+    br(), br(), br(), br(), br(), br(), 
+    br(), br(), br(), br(), br(), br(), 
+    br(), br(), br(), br(),
+    HTML('<footer>
+          <div align="center">
+          <p>Chris Feller | chrisjfeller.com<p/>
+         </div>
+         </footer>')
   ),
   
   dashboardBody(
   fluidRow(
   column(3,
-         h3('Correlation Table'),
          DT::dataTableOutput('table')), 
   
   column(9,
-         h3('Plots'),
          br(),
          br(),
          plotOutput("plot"), 
@@ -49,38 +55,46 @@ ui <- dashboardPage(skin = 'blue',
 server <- function(input, output){
   output$table <- DT::renderDataTable(
     
-    if (input$correlation == 'Pearson Correlation') {
+    if (input$correlation == 'Pearson') {
     pearson %>% 
+        mutate_if(is.numeric, ~round(., 3)) %>%
         select('STATISTIC', input$statistic) %>% 
-        arrange(desc(abs(pearson[[sprintf('%s', input$statistic)]]))) }
+        rename('CORRELATION' = input$statistic) %>%
+        filter((STATISTIC != input$statistic) & (STATISTIC != 'RANK'))%>%
+        arrange(desc(abs(CORRELATION)))}
     
-    else if (input$correlation == 'Spearman Correlation') {
+    else if (input$correlation == 'Spearman') {
       spearman %>% 
+        mutate_if(is.numeric, ~round(., 3)) %>%
         select('STATISTIC', input$statistic) %>% 
-        arrange(desc(abs(spearman[[sprintf('%s', input$statistic)]]))) },  
+        rename('CORRELATION' = input$statistic) %>%
+        filter(STATISTIC != input$statistic) %>%
+        arrange(desc(abs(CORRELATION)))},  
     
     options = list(lengthChange = FALSE,
                    pageLength = 20, 
-                   searching = FALSE))
+                   searching = FALSE))  
   
   
   output$plot <- renderPlot({
-    if (input$correlation =='Pearson Correlation') {
+    if (input$correlation =='Pearson') {
     lags %>%
       ggplot(aes_string(x=paste0("`", input$statistic, "`"), 
                         y=sprintf('`%s_lag`', input$statistic))) +
       geom_point() +
       labs(y = "N Year Value", x = 'N+1 Year Value') +
       ggtitle(sprintf('Season Over Season Correlation: %s', round(cor(lags[input$statistic], lags[sprintf('%s_lag', input$statistic)], method = 'pearson'), 3))) +
+      theme_grey(15) + 
       theme(plot.title = element_text(hjust = 0.5, face = 'bold')) }
     
-    else if (input$correlation =='Spearman Correlation') {
+    else if (input$correlation =='Spearman') {
       lags %>%
         ggplot(aes_string(x=paste0("`", input$statistic, "`"), 
                           y=sprintf('`%s_lag`', input$statistic))) +
         geom_point() +
         labs(y = "N Year Value", x = 'N+1 Year Value') +
         ggtitle(sprintf('Season Over Season Correlation: %s', round(cor(lags[input$statistic], lags[sprintf('%s_lag', input$statistic)], method = 'spearman'), 3))) +
+        theme_grey(15) + 
         theme(plot.title = element_text(hjust = 0.5, face = 'bold')) }
     
       }
@@ -89,7 +103,7 @@ server <- function(input, output){
   selected <- reactive(season %>% filter(STATISTIC == input$statistic))
   
   output$plot2 <- renderPlot({
-    if (input$correlation == 'Pearson Correlation') {
+    if (input$correlation == 'Pearson') {
       selected() %>%
         ggplot(aes(x=SEASON, y=PEARSON_CORRELATION, group=1)) +
         geom_line() +
@@ -101,7 +115,7 @@ server <- function(input, output){
         theme(axis.text.x = element_text(angle = 45, hjust = 1), 
               plot.title = element_text(hjust = 0.5, face = 'bold'))}
     
-    else if (input$correlation == 'Spearman Correlation') {
+    else if (input$correlation == 'Spearman') {
       selected() %>%
         ggplot(aes(x=SEASON, y=SPEARMAN_CORRELATION, group=1)) +
         geom_line() +
