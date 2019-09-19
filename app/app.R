@@ -8,7 +8,7 @@ library(shinythemes)
 library(shinydashboard)
 
 # Set Working Directory
-setwd('/Users/chrisfeller/Desktop/NBA_Correlation_App/app/')
+# setwd('/Users/chrisfeller/Desktop/NBA_Correlation_App/app/')
 
 # Read in correlation data 
 pearson <- read.csv('data/pearson_correlation.csv', check.names=FALSE)
@@ -26,11 +26,21 @@ ui <- dashboardPage(skin = 'blue',
     selectInput('correlation', h3('Correlation'),
                 choices = c('Pearson', 'Spearman'),
                 selected = 'Pearson'),
-    br(), br(), br(), br(), br(), br(), 
-    br(), br(), br(), br(), br(), br(), 
-    br(), br(), br(), br(), br(), br(), 
-    br(), br(), br(), br(), br(), br(), 
-    br(), br(), br(), br(),
+    p("The  NBA Correlation App illustrates the relationship between various 
+      on-court metrics at the team level between the 2004-2005 and 2018-2019 
+      seasons."),
+    br(),
+    p("Upon selecting a statistic and correlation coefficient from the drop down 
+      menus above, the page will populate with a table and two plots."), 
+    br(),
+    p("The table displays the correlation between the selected statistic and all 
+      other statistics in descending order. The top plot visualizes the season-over-season 
+      correlation of the selected statistic, quantifying it’s stability over time. 
+      The bottom plot illustrates the strength of the relationship between the selected 
+      statistic and Net Rating over time."),
+    br(), br(), br(), 
+    br(), br(), br(), 
+    br(), br(), br(), 
     HTML('<footer>
           <div align="center">
           <p>Chris Feller | chrisjfeller.com<p/>
@@ -49,8 +59,9 @@ ui <- dashboardPage(skin = 'blue',
          plotOutput("plot"), 
          br(), 
          plotOutput("plot2"))
-  
-)))
+    )
+  )
+)
 
 server <- function(input, output){
   output$table <- DT::renderDataTable(
@@ -79,20 +90,20 @@ server <- function(input, output){
   output$plot <- renderPlot({
     if (input$correlation =='Pearson') {
     lags %>%
-      ggplot(aes_string(x=paste0("`", input$statistic, "`"), 
-                        y=sprintf('`%s_lag`', input$statistic))) +
+      ggplot(aes_string(x=sprintf('`%s_lag`', input$statistic), 
+                        y=paste0("`", input$statistic, "`"))) +
       geom_point() +
-      labs(y = "N Year Value", x = 'N+1 Year Value') +
+      labs(y = "N+1 Year Value", x = 'N Year Value') +
       ggtitle(sprintf('Season Over Season Correlation: %s', round(cor(lags[input$statistic], lags[sprintf('%s_lag', input$statistic)], method = 'pearson'), 3))) +
       theme_grey(15) + 
       theme(plot.title = element_text(hjust = 0.5, face = 'bold')) }
     
     else if (input$correlation =='Spearman') {
       lags %>%
-        ggplot(aes_string(x=paste0("`", input$statistic, "`"), 
-                          y=sprintf('`%s_lag`', input$statistic))) +
+        ggplot(aes_string(x=sprintf('`%s_lag`', input$statistic), 
+                          y=paste0("`", input$statistic, "`"))) +
         geom_point() +
-        labs(y = "N Year Value", x = 'N+1 Year Value') +
+        labs(y = "N+1 Year Value", x = 'N Year Value') +
         ggtitle(sprintf('Season Over Season Correlation: %s', round(cor(lags[input$statistic], lags[sprintf('%s_lag', input$statistic)], method = 'spearman'), 3))) +
         theme_grey(15) + 
         theme(plot.title = element_text(hjust = 0.5, face = 'bold')) }
@@ -126,10 +137,9 @@ server <- function(input, output){
         theme_grey(15) + 
         theme(axis.text.x = element_text(angle = 45, hjust = 1), 
               plot.title = element_text(hjust = 0.5, face = 'bold'))
-    }
-    
-  })
-  
+        }
+      }
+    )
   }
 
 shinyApp(ui = ui, server = server)
