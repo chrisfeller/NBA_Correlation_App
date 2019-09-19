@@ -7,6 +7,18 @@ import pandas as pd
 
 
 def season_lags(save=False):
+    """
+    Create dataframe with an additional column containing lagged values from the
+    previous season for each team.
+
+    Args:
+        save (bool): Indicates whether to write resulting pandas DataFrame to
+                     .csv file. Defaults to False.
+
+    Returns:
+        season_lag_df (DataFrame): Table with additional column of lagged
+        values from the previous season.
+    """
     df = pd.read_csv('../app/data/Team_Stats.csv')
     shifted = df.groupby(['TEAM']).shift(-1)
     season_lag_df = df.join(shifted.rename(columns=lambda x: x+"_lag"))
@@ -17,6 +29,18 @@ def season_lags(save=False):
     return season_lag_df
 
 def calculate_correlations(save=False):
+    """
+    Create two dataframes each containing either the pearson or spearman
+    correlation matrix for all metrics.
+
+    Args:
+        save (bool): Indicates whether to write resulting pandas DataFrame to
+                     .csv file. Defaults to False.
+
+    Returns:
+        pearson_corr (DataFrame): Table pearson correlation matrix
+        spearman_corr (DataFrame): Table spearman correlation matrix
+    """
     # Read in Basketball-Reference tables
     bbref_team_data = pd.read_csv('../app/data/Team_Stats.csv')
 
@@ -40,6 +64,18 @@ def calculate_correlations(save=False):
     return pearson_corr, spearman_corr
 
 def season_correlations(save=False):
+    """
+    Create correlation matrix over time for each season between 2004-2005 and
+    2018-2019.
+
+    Args:
+        save (bool): Indicates whether to write resulting pandas DataFrame to
+                     .csv file. Defaults to False.
+
+    Returns:
+        bbref_correlation_season_df (DataFrame): Correlation matrix for each
+        season between 2004-2005 and 2018-2019
+    """
     # Read in Basketball-Reference tables
     bbref_team_data = pd.read_csv('../app/data/Team_Stats.csv')
 

@@ -1,0 +1,10 @@
+name: correlation_app
+title:
+username:
+account: chrisfeller
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 1215335
+bundleId: 2425702
+url: https://chrisfeller.shinyapps.io/correlation_app/
+when: 1568864475.92151
